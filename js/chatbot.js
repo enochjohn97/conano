@@ -173,35 +173,84 @@ function showContextualQuickReplies(topic) {
 }
 
 /* ─── FAQ responses (still used as first line of defence) ─── */
+/* ─── FAQ responses (Knowledge Base) ─── */
 const responses = {
   "say hi": [
-    "Hello! Great to meet you 😊 What brings you here today?",
-    "Hi there! How can I make your day better?"
+    "Hello! Great to meet you 😊 I'm ConanoAI. What brings you here today?",
+    "Hi there! How can I make your day better? I'm here to help with any project inquiries."
   ],
-  // ... (keep all the existing FAQ entries from your previous code, I'll abbreviate)
-  // For brevity, I'll keep a few important ones; you can paste the full object from earlier.
+  "what services do you offer?": [
+    "Conano specializes in high-end Full-stack Development, UI/UX Design, Mobile App Development, and Cloud/DevOps solutions. We build everything from sleek websites to complex enterprise systems."
+  ],
+  "tell me about conano": [
+    "Conano is a software development power-house founded by Enoch John. We focus on delivering premium digital experiences with a focus on performance, scalability, and stunning aesthetics."
+  ],
+  "how much experience do you have?": [
+    "Our team has over 5 years of industry experience, having successfully delivered 50+ projects ranging from fintech apps to creative portfolios."
+  ],
+  "i have a project in mind": [
+    "That's exciting! 🚀 We'd love to hear more. Are you looking for web development, a mobile app, or a complete brand design?"
+  ],
+  "full-stack development details": [
+    "We use modern stacks like React, Next.js, Node.js, and Python to build robust, scalable applications. Whether it's a custom CRM or a social platform, we've got you covered."
+  ],
+  "ui/ux design details": [
+    "Our design philosophy is 'Aesthetics meets Function'. We create intuitive, high-fidelity interfaces that wow users and drive engagement."
+  ],
+  "mobile app development": [
+    "We build native and cross-platform apps (Flutter/React Native) that feel smooth and professional on both iOS and Android."
+  ],
+  "cloud & devops": [
+    "From AWS/Azure setup to Dockerizing your workflow, we ensure your applications are secure, fast, and always online."
+  ],
+  "how many projects have you done?": [
+    "To date, we've completed over 50 projects across various industries including E-commerce, Healthcare, and Creative Arts."
+  ],
+  "what technologies do you use?": [
+    "Our toolkit includes JavaScript (React, Vue), Python, Kotlin, Flutter, and cloud platforms like AWS and Firebase. We always pick the best tool for the specific job."
+  ],
+  "are you available for freelance?": [
+    "Yes! We are currently open for new projects. Feel free to reach out via the contact form or WhatsApp."
+  ],
+  "how can i reach you?": [
+    "You can reach us directly via email at ejidoko75@gmail.com, or call/WhatsApp us at +2348188416922. We're also active on LinkedIn!"
+  ],
+  "whatsapp number": [
+    "You can reach Enoch John on WhatsApp at +2348188416922 for a quick chat about your project."
+  ],
+  "email address": [
+    "Our official contact email is ejidoko75@gmail.com. We typically respond within 24 hours."
+  ],
   "contact us": [
-    "You can reach our team at ejidoko75@gmail.com or call +2348188416922. We're available 24/7. 📞"
+    "You can reach our team at ejidoko75@gmail.com or call +2348188416922. We're available 24/7 to discuss your next big idea. 📞"
   ],
   "what can you do": [
-    "I can answer questions about Conano's services, experience, portfolio, and guide you through our capabilities."
+    "I can answer questions about Conano's services, experience, and portfolio. I can also help you start a project or find contact details!"
   ],
+  "pricing": [
+    "Our pricing is project-based. We provide custom quotes after a brief discovery call to understand your specific needs and timeline."
+  ],
+  "deadlines": [
+    "We take deadlines very seriously. Our process includes clear milestones and regular updates to ensure everything stays on track."
+  ]
 };
 
 /* ─── Get bot reply: FAQ → backend API with full history ─── */
 async function getReply(text) {
   const t = text.toLowerCase().trim();
-  // Try FAQ first
+  
+  // 1. Try exact or partial matches from our Knowledge Base (responses)
   for (const [key, val] of Object.entries(responses)) {
-    if (t.includes(key.toLowerCase())) {
+    if (t === key || t.includes(key)) {
       const arr = Array.isArray(val) ? val : [val];
       return arr[Math.floor(Math.random() * arr.length)];
     }
   }
 
-  // Backend call with full history
+  // 2. If no direct match, attempt to call the AI backend
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 12000);
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  
   try {
     const res = await fetch("/api/chat", {
       method: "POST",
@@ -209,21 +258,33 @@ async function getReply(text) {
       body: JSON.stringify({ messages: chatHistory }),
       signal: controller.signal,
     });
+    
     clearTimeout(timeout);
-    if (!res.ok) {
-      if (res.status === 401) throw new Error("Invalid API key");
-      if (res.status === 429) throw new Error("Rate limited");
-      throw new Error(`Server error (${res.status})`);
+
+    if (res.ok) {
+      const data = await res.json();
+      return data.reply?.trim() || "I'm processing your request. Could you please elaborate? 😊";
     }
-    const data = await res.json();
-    return data.reply?.trim() || "I'm not sure how to answer that. Could you rephrase? 😊";
+
+    // Handle specific server errors gracefully
+    if (res.status === 401) {
+      console.warn("AI Backend: Invalid API Key.");
+    } else if (res.status === 404) {
+      console.warn("AI Backend: Endpoint not found. Ensure server is running.");
+    }
+    
+    throw new Error(`Server status: ${res.status}`);
+
   } catch (err) {
     clearTimeout(timeout);
-    console.error("Backend fetch error:", err.message);
-    if (err.name === "AbortError") return "Hmm, my brain is taking a bit long today. Could you try again? ⏳";
-    if (err.message.includes("Invalid API key") || err.message.includes("401"))
-      return "I'm having a little trouble accessing my knowledge base right now. Please try again in a moment.";
-    return "I'm experiencing a hiccup. Could you try asking that again? 🤖";
+    console.error("Chat Error:", err.message);
+
+    // 3. Fallback: If AI fails, provide a smart "Offline" response instead of just an error
+    if (t.includes("project") || t.includes("help") || t.includes("work")) {
+      return "I'd love to discuss that! While I'm having a slight connection issue with my AI brain, I can tell you that we specialize in custom digital solutions. Would you like our WhatsApp or Email?";
+    }
+    
+    return "I'm here! My connection to the AI cloud is a bit shaky right now, but I'm still happy to chat about Conano's services or contact details. What can I help with?";
   }
 }
 
