@@ -5,34 +5,41 @@ var mx = 0,
   my = 0,
   rx = 0,
   ry = 0;
-document.addEventListener("mousemove", function (e) {
-  mx = e.clientX;
-  my = e.clientY;
-  cur.style.left = mx + "px";
-  cur.style.top = my + "px";
-});
-function animRing() {
-  rx += (mx - rx) * 0.12;
-  ry += (my - ry) * 0.12;
-  ring.style.left = rx + "px";
-  ring.style.top = ry + "px";
-  requestAnimationFrame(animRing);
-}
-animRing();
-document
-  .querySelectorAll(
-    "a,button,.skill-card,.svc-card,.port-item,.art-card,.tcard",
-  )
-  .forEach(function (el) {
-    el.addEventListener("mouseenter", function () {
-      cur.classList.add("expand");
-      ring.classList.add("expand");
-    });
-    el.addEventListener("mouseleave", function () {
-      cur.classList.remove("expand");
-      ring.classList.remove("expand");
-    });
+var isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+if (!isTouch) {
+  document.addEventListener("mousemove", function (e) {
+    mx = e.clientX;
+    my = e.clientY;
+    cur.style.transform = "translate3d(" + mx + "px, " + my + "px, 0)";
   });
+
+  function animRing() {
+    rx += (mx - rx) * 0.12;
+    ry += (my - ry) * 0.12;
+    ring.style.transform = "translate3d(" + rx + "px, " + ry + "px, 0)";
+    requestAnimationFrame(animRing);
+  }
+  animRing();
+
+  document
+    .querySelectorAll(
+      "a,button,.skill-card,.svc-card,.port-item,.art-card,.tcard",
+    )
+    .forEach(function (el) {
+      el.addEventListener("mouseenter", function () {
+        cur.classList.add("expand");
+        ring.classList.add("expand");
+      });
+      el.addEventListener("mouseleave", function () {
+        cur.classList.remove("expand");
+        ring.classList.remove("expand");
+      });
+    });
+} else {
+  if (cur) cur.style.display = "none";
+  if (ring) ring.style.display = "none";
+}
 
 /* ── PRELOADER ── */
 var pct = 0;
@@ -43,31 +50,55 @@ var pctInt = setInterval(function () {
     pct = 100;
     clearInterval(pctInt);
   }
-  pctEl.textContent = pct + "%";
+  if (pctEl) pctEl.textContent = pct + "%";
 }, 120);
 window.addEventListener("load", function () {
   setTimeout(function () {
-    document.getElementById("preloader").classList.add("done");
+    var preloader = document.getElementById("preloader");
+    if (preloader) preloader.classList.add("done");
   }, 2400);
 });
 
-/* ── NAVBAR ── */
+/* ── NAVBAR & SCROLL ── */
 var nb = document.getElementById("navbar"),
   btt = document.getElementById("btt");
+var sections = [];
+var navLinks = [];
+
+function updateScrollData() {
+  sections = Array.from(document.querySelectorAll("section[id]")).map(function(s) {
+    return { id: s.id, offset: s.offsetTop };
+  });
+  navLinks = document.querySelectorAll(".nav-links a");
+}
+
+window.addEventListener("load", updateScrollData);
+window.addEventListener("resize", updateScrollData);
+
+var scrollTicking = false;
 window.addEventListener("scroll", function () {
-  var y = window.scrollY;
-  nb.classList.toggle("stuck", y > 60);
-  btt.classList.toggle("show", y > 400);
-  var secs = document.querySelectorAll("section[id]");
-  var links = document.querySelectorAll(".nav-links a");
-  var cur = "";
-  secs.forEach(function (s) {
-    if (y >= s.offsetTop - 140) cur = s.id;
-  });
-  links.forEach(function (l) {
-    l.classList.remove("active");
-    if (l.getAttribute("href") === "#" + cur) l.classList.add("active");
-  });
+  if (!scrollTicking) {
+    window.requestAnimationFrame(function() {
+      var y = window.scrollY;
+      if (nb) nb.classList.toggle("stuck", y > 60);
+      if (btt) btt.classList.toggle("show", y > 400);
+      
+      var currentSec = "";
+      for (var i = 0; i < sections.length; i++) {
+        if (y >= sections[i].offset - 140) {
+          currentSec = sections[i].id;
+        }
+      }
+      
+      navLinks.forEach(function (l) {
+        l.classList.remove("active");
+        if (l.getAttribute("href") === "#" + currentSec) l.classList.add("active");
+      });
+      
+      scrollTicking = false;
+    });
+    scrollTicking = true;
+  }
 });
 
 /* ── MOBILE MENU ── */
@@ -76,27 +107,35 @@ var hbg = document.getElementById("hbg"),
   isOpen = false;
 function openMob() {
   isOpen = true;
-  mob.classList.add("open");
-  hbg.classList.add("open");
-  hbg.setAttribute("aria-expanded", "true");
+  if (mob) mob.classList.add("open");
+  if (hbg) {
+    hbg.classList.add("open");
+    hbg.setAttribute("aria-expanded", "true");
+  }
   document.body.style.overflow = "hidden";
 }
 function closeMob() {
   isOpen = false;
-  mob.classList.remove("open");
-  hbg.classList.remove("open");
-  hbg.setAttribute("aria-expanded", "false");
+  if (mob) mob.classList.remove("open");
+  if (hbg) {
+    hbg.classList.remove("open");
+    hbg.setAttribute("aria-expanded", "false");
+  }
   document.body.style.overflow = "";
 }
-hbg.addEventListener("click", function (e) {
-  e.stopPropagation();
-  isOpen ? closeMob() : openMob();
-});
-mob.querySelectorAll("a").forEach(function (a) {
-  a.addEventListener("click", closeMob);
-});
+if (hbg) {
+  hbg.addEventListener("click", function (e) {
+    e.stopPropagation();
+    isOpen ? closeMob() : openMob();
+  });
+}
+if (mob) {
+  mob.querySelectorAll("a").forEach(function (a) {
+    a.addEventListener("click", closeMob);
+  });
+}
 document.addEventListener("click", function (e) {
-  if (isOpen && !mob.contains(e.target) && !hbg.contains(e.target)) closeMob();
+  if (isOpen && mob && !mob.contains(e.target) && hbg && !hbg.contains(e.target)) closeMob();
 });
 window.addEventListener("resize", function () {
   if (window.innerWidth > 900) closeMob();
@@ -115,18 +154,20 @@ var codeLines = [
   "};",
 ];
 var codeEl = document.getElementById("heroCode");
-codeLines.forEach(function (line, i) {
-  var span = document.createElement("span");
-  span.className = "code-line";
-  span.innerHTML = line || "&nbsp;";
-  codeEl.appendChild(span);
-  setTimeout(
-    function () {
-      span.classList.add("visible");
-    },
-    1400 + i * 180,
-  );
-});
+if (codeEl) {
+  codeLines.forEach(function (line, i) {
+    var span = document.createElement("span");
+    span.className = "code-line";
+    span.innerHTML = line || "&nbsp;";
+    codeEl.appendChild(span);
+    setTimeout(
+      function () {
+        span.classList.add("visible");
+      },
+      1400 + i * 180,
+    );
+  });
+}
 
 /* ── SCROLL REVEAL ── */
 var rvEls = document.querySelectorAll(".rv,.rvl,.rvr");
@@ -165,7 +206,7 @@ function filterPort(cat, btn) {
   document.querySelectorAll(".pf").forEach(function (b) {
     b.classList.remove("active");
   });
-  btn.classList.add("active");
+  if (btn) btn.classList.add("active");
   document.querySelectorAll(".port-item").forEach(function (item) {
     var cats = item.dataset.cat || "";
     var show = cat === "all" || cats.split(" ").includes(cat);
@@ -177,7 +218,7 @@ function filterPort(cat, btn) {
     } else {
       item.style.opacity = "0";
       setTimeout(function () {
-        if (!cats.split(" ").includes(cat) && btn.classList.contains("active"))
+        if (!cats.split(" ").includes(cat) && btn && btn.classList.contains("active"))
           item.style.display = "none";
       }, 310);
     }
@@ -186,7 +227,7 @@ function filterPort(cat, btn) {
 
 /* ── TESTIMONIALS CAROUSEL ── */
 var tTrack = document.getElementById("testiTrack");
-var tcards = tTrack.querySelectorAll(".tcard");
+var tcards = tTrack ? tTrack.querySelectorAll(".tcard") : [];
 var tDotsEl = document.getElementById("tDots");
 var ti = 0;
 
@@ -195,6 +236,7 @@ function getTvis() {
 }
 
 function setTCardWidths() {
+  if (!tTrack) return;
   var vis = getTvis(),
     gap = 24;
   var total = tTrack.parentElement.offsetWidth;
@@ -207,6 +249,7 @@ function setTCardWidths() {
 }
 
 function buildTDots() {
+  if (!tDotsEl) return;
   tDotsEl.innerHTML = "";
   var vis = getTvis();
   var pages = Math.ceil(tcards.length / vis);
@@ -223,6 +266,7 @@ function buildTDots() {
 }
 
 function goTesti(i) {
+  if (!tTrack || tcards.length === 0) return;
   var vis = getTvis(),
     pages = Math.ceil(tcards.length / vis);
   ti = Math.max(0, Math.min(i, pages - 1));
@@ -233,38 +277,47 @@ function goTesti(i) {
   });
 }
 
-document.getElementById("tPrev").addEventListener("click", function () {
-  goTesti(ti - 1);
-});
-document.getElementById("tNext").addEventListener("click", function () {
-  goTesti(ti + 1);
-});
+var tPrevBtn = document.getElementById("tPrev");
+if (tPrevBtn) {
+  tPrevBtn.addEventListener("click", function () {
+    goTesti(ti - 1);
+  });
+}
+var tNextBtn = document.getElementById("tNext");
+if (tNextBtn) {
+  tNextBtn.addEventListener("click", function () {
+    goTesti(ti + 1);
+  });
+}
 
 var tAuto = setInterval(function () {
   goTesti((ti + 1) % Math.ceil(tcards.length / getTvis()));
 }, 5000);
-tTrack.addEventListener("mouseenter", function () {
-  clearInterval(tAuto);
-});
-tTrack.addEventListener("mouseleave", function () {
-  tAuto = setInterval(function () {
-    goTesti((ti + 1) % Math.ceil(tcards.length / getTvis()));
-  }, 5000);
-});
 
-// touch
-var tsx = 0;
-tTrack.addEventListener(
-  "touchstart",
-  function (e) {
-    tsx = e.touches[0].clientX;
-  },
-  { passive: true },
-);
-tTrack.addEventListener("touchend", function (e) {
-  var d = tsx - e.changedTouches[0].clientX;
-  if (Math.abs(d) > 40) d > 0 ? goTesti(ti + 1) : goTesti(ti - 1);
-});
+if (tTrack) {
+  tTrack.addEventListener("mouseenter", function () {
+    clearInterval(tAuto);
+  });
+  tTrack.addEventListener("mouseleave", function () {
+    tAuto = setInterval(function () {
+      goTesti((ti + 1) % Math.ceil(tcards.length / getTvis()));
+    }, 5000);
+  });
+
+  // touch
+  var tsx = 0;
+  tTrack.addEventListener(
+    "touchstart",
+    function (e) {
+      tsx = e.touches[0].clientX;
+    },
+    { passive: true },
+  );
+  tTrack.addEventListener("touchend", function (e) {
+    var d = tsx - e.changedTouches[0].clientX;
+    if (Math.abs(d) > 40) d > 0 ? goTesti(ti + 1) : goTesti(ti - 1);
+  });
+}
 
 window.addEventListener("load", function () {
   setTCardWidths();
@@ -273,27 +326,23 @@ window.addEventListener("resize", function () {
   setTCardWidths();
 });
 
-/* ── CONTACT FORM (EMAIL + WHATSAPP) ── */
-(function () {
-  // Initialize EmailJS with your public key
-  emailjs.init("crnq9Em4AJPFtVoeQ");
-})();
+/* ── CONTACT FORM (EMAIL ONLY) ── */
+if (typeof emailjs !== 'undefined') {
+  (function () {
+    emailjs.init("crnq9Em4AJPFtVoeQ");
+  })();
+}
 
-
-//submit message function
 function submitForm() {
-  // --- Grab values ---
   var name    = document.getElementById("fName").value.trim();
   var email   = document.getElementById("fEmail").value.trim();
   var subject = document.getElementById("fSubject").value;
-  var budget  = document.getElementById("fBudget").value;
   var message = document.getElementById("fMessage").value.trim();
 
-  // --- Basic validation ---
-  var nameInput = document.getElementById("fName");
+  // Basic validation
   if (!name) {
-    nameInput.style.borderColor = "rgba(244,244,244,.4)";
-    nameInput.focus();
+    document.getElementById("fName").style.borderColor = "rgba(244,244,244,.4)";
+    document.getElementById("fName").focus();
     return;
   }
   if (!email) {
@@ -311,54 +360,28 @@ function submitForm() {
     return;
   }
 
-  // --- Prepare email data ---
+  // Prepare email params
   var emailParams = {
     from_name: name,
     reply_to: email,
     subject: subject,
-    budget: budget,
     message: message
   };
 
-  // --- Prepare WhatsApp message (detailed version) ---
-  var whatsappText =
-    "📩 *New Contact Form Message* %0A" +
-    "👤 *Name:* " + encodeURIComponent(name) + "%0A" +
-    "📧 *Email:* " + encodeURIComponent(email) + "%0A" +
-    "📌 *Subject:* " + encodeURIComponent(subject) + "%0A" +
-    "💰 *Budget:* " + encodeURIComponent(budget) + "%0A" +
-    "💬 *Message:* " + encodeURIComponent(message);
-
-  // --- Replace this with your actual CallMeBot API key ---
-  // var callMeBotKey = "YOUR_CALLMEBOT_API_KEY";
-
-  // --- Show loading state ---
   var submitBtn = document.querySelector(".fsub");
   var originalHTML = submitBtn.innerHTML;
   submitBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Sending...';
   submitBtn.disabled = true;
 
-  // --- Send both in parallel ---
-  var emailPromise = emailjs.send("service_ijqcqy8", "template_36qqoqc", emailParams);
-
-  // var whatsappPromise = fetch(
-  //   "https://api.callmebot.com/whatsapp.php?" +
-  //   "phone=2348188416922" +          // <-- your number, no + sign
-  //   "&text=" + whatsappText +
-  //   "&apikey=" + callMeBotKey
-  // );
-
-  Promise.all([emailPromise, whatsappPromise])
+  emailjs.send("service_ijqcqy8", "template_36qqoqc", emailParams)
     .then(function () {
-      // Success – show the thank-you message
       document.getElementById("contactForm").style.display = "none";
       document.getElementById("formOk").style.display = "block";
     })
     .catch(function (error) {
-      console.error("Send failed:", error);
-      // Restore button and optionally show an error message
+      console.error("Email send failed:", error);
+      alert("Oops! Something went wrong. Please try again.");
       submitBtn.innerHTML = originalHTML;
       submitBtn.disabled = false;
-      alert("Oops! Something went wrong. Please try again.");
     });
-}
+}
