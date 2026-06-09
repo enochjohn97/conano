@@ -221,18 +221,10 @@
     <!-- SKILLS -->
     <section id="skills">
       <div class="wrap pad">
-        <div class="skills-header">
-          <div class="rv">
-            <div class="section-label">Expertise</div>
-            <h2 class="section-title">Technical <em>Skills</em></h2>
-          </div>
-          <div class="rv d2">
-            <p class="section-sub">
-              A carefully curated toolkit refined through years of real-world
-              project experience and continuous learning.
-            </p>
-          </div>
-        </div>
+     
+        <h2 class="section-title rv" style="text-align: center; padding-bottom: 25px; padding-top: 28px;">Technical Skills</h2>
+        <p style="text-align: center; max-width: 600px; margin: 0 auto 20px; color: var(--gray);">A carefully curated toolkit refined through years of real-world project experience and continuous learning.</p>
+
         <div class="skills-grid">
           <div class="skill-card rv">
             <span class="sk-icon">💻</span>
@@ -297,7 +289,7 @@
         </div>
         <div class="skills-tags rv d2">
           <span class="stag">HTML5</span><span class="stag">CSS3</span
-          ><span class="stag">GraphQL</span><span class="stag">REST APIs</span
+          ><span class="stag">Sockets</span><span class="stag">REST APIs</span
           ><span class="stag">Git & GitHub</span><span class="stag">Figma</span
           ><span class="stag">Redis</span><span class="stag">Webpack</span
           ><span class="stag">CI/CD</span><span class="stag">Linux</span
@@ -310,14 +302,11 @@
     <!-- SERVICES -->
     <section id="services">
       <div class="wrap pad">
-        <div class="svc-header rv">
-          <div class="section-label">What I Do</div>
-          <h2 class="section-title">Services I <em>Offer</em></h2>
-          <p class="section-sub" style="margin: 0 auto">
-            End-to-end digital solutions built with precision and purpose. From
-            concept to deployment.
-          </p>
-        </div>
+
+        <h2 class="section-title rv" style="text-align: center; padding-bottom: 25px; color: #eee; padding-top: 28px;">What I <em>Offer</em></h2>
+        <p style="text-align: center; max-width: 600px; margin: 0 auto 20px; padding-bottom: 25px; color: var(--gray);">End-to-end digital solutions built with precision and purpose. From
+    concept to deployment.</p>
+
         <div class="svc-grid">
           <div class="svc-card rv">
             <div class="svc-num">01</div>
@@ -426,27 +415,33 @@
     </section>
 
     <!-- PORTFOLIO -->
-<section id="portfolio">
-  <div class="parallax-bg" id="parallaxLayer"></div>
-  <div class="wrap pad">
-    <div class="port-head" id="portHead">
-      <div class="rv">
-        <div class="section-label">✦ Curated Showcase</div>
-        <h2 class="section-title">Recent <em>Projects</em> — <span class="gradient-text">4 at a time</span></h2>
-      </div>
-    </div>
+    <section id="portfolio">
+      <div class="parallax-bg" id="parallaxLayer"></div>
+      <div class="wrap pad">
+        <div class="port-head" id="portHead">
+          <div class="rv">
+            <div class="section-label">✦ Portfolio Showcase</div>
+            <h2 class="section-title">
+              Project <em>Gallery</em> <span class="gradient-text"></span>
+            </h2>
+          </div>
+        </div>
 
-    <!-- Carousel Container -->
-    <div class="carousel-wrapper">
-      <button class="carousel-btn prev" id="prevBtn" aria-label="Previous">‹</button>
-      <div class="carousel-container">
-        <div class="carousel-track" id="carouselTrack"></div>
+        <!-- Carousel Container -->
+        <div class="carousel-wrapper">
+          <button class="carousel-btn prev" id="prevBtn" aria-label="Previous">
+            ‹
+          </button>
+          <div class="carousel-container">
+            <div class="carousel-track" id="carouselTrack"></div>
+          </div>
+          <button class="carousel-btn next" id="nextBtn" aria-label="Next">
+            ›
+          </button>
+        </div>
+        <div class="carousel-dots" id="carouselDots"></div>
       </div>
-      <button class="carousel-btn next" id="nextBtn" aria-label="Next">›</button>
-    </div>
-    <div class="carousel-dots" id="carouselDots"></div>
-  </div>
-</section>
+    </section>
 
     <!-- TESTIMONIALS -->
     <section id="testimonials">
