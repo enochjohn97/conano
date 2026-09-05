@@ -1,3 +1,8 @@
+var emailServiceReady = typeof emailjs !== "undefined";
+if (emailServiceReady) {
+  emailjs.init({ publicKey: "CRaI79JVdwOeCq079" });
+}
+
 /* ── CURSOR ── */
 var cur = document.getElementById("cursor"),
   ring = document.getElementById("cursorRing");
@@ -5,7 +10,7 @@ var mx = 0,
   my = 0,
   rx = 0,
   ry = 0;
-var isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+var isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
 
 if (!isTouch) {
   document.addEventListener("mousemove", function (e) {
@@ -66,9 +71,11 @@ var sections = [];
 var navLinks = [];
 
 function updateScrollData() {
-  sections = Array.from(document.querySelectorAll("section[id]")).map(function(s) {
-    return { id: s.id, offset: s.offsetTop };
-  });
+  sections = Array.from(document.querySelectorAll("section[id]")).map(
+    function (s) {
+      return { id: s.id, offset: s.offsetTop };
+    },
+  );
   navLinks = document.querySelectorAll(".nav-links a");
 }
 
@@ -78,23 +85,24 @@ window.addEventListener("resize", updateScrollData);
 var scrollTicking = false;
 window.addEventListener("scroll", function () {
   if (!scrollTicking) {
-    window.requestAnimationFrame(function() {
+    window.requestAnimationFrame(function () {
       var y = window.scrollY;
       if (nb) nb.classList.toggle("stuck", y > 60);
       if (btt) btt.classList.toggle("show", y > 400);
-      
+
       var currentSec = "";
       for (var i = 0; i < sections.length; i++) {
         if (y >= sections[i].offset - 140) {
           currentSec = sections[i].id;
         }
       }
-      
+
       navLinks.forEach(function (l) {
         l.classList.remove("active");
-        if (l.getAttribute("href") === "#" + currentSec) l.classList.add("active");
+        if (l.getAttribute("href") === "#" + currentSec)
+          l.classList.add("active");
       });
-      
+
       scrollTicking = false;
     });
     scrollTicking = true;
@@ -135,7 +143,14 @@ if (mob) {
   });
 }
 document.addEventListener("click", function (e) {
-  if (isOpen && mob && !mob.contains(e.target) && hbg && !hbg.contains(e.target)) closeMob();
+  if (
+    isOpen &&
+    mob &&
+    !mob.contains(e.target) &&
+    hbg &&
+    !hbg.contains(e.target)
+  )
+    closeMob();
 });
 window.addEventListener("resize", function () {
   if (window.innerWidth > 900) closeMob();
@@ -218,7 +233,11 @@ function filterPort(cat, btn) {
     } else {
       item.style.opacity = "0";
       setTimeout(function () {
-        if (!cats.split(" ").includes(cat) && btn && btn.classList.contains("active"))
+        if (
+          !cats.split(" ").includes(cat) &&
+          btn &&
+          btn.classList.contains("active")
+        )
           item.style.display = "none";
       }, 310);
     }
@@ -327,15 +346,10 @@ window.addEventListener("resize", function () {
 });
 
 /* ── CONTACT FORM (EMAIL ONLY) ── */
-if (typeof emailjs !== 'undefined') {
-  (function () {
-    emailjs.init("crnq9Em4AJPFtVoeQ");
-  })();
-}
 
 function submitForm() {
-  var name    = document.getElementById("fName").value.trim();
-  var email   = document.getElementById("fEmail").value.trim();
+  var name = document.getElementById("fName").value.trim();
+  var email = document.getElementById("fEmail").value.trim();
   var subject = document.getElementById("fSubject").value;
   var message = document.getElementById("fMessage").value.trim();
 
@@ -346,26 +360,38 @@ function submitForm() {
     return;
   }
   if (!email) {
-    document.getElementById("fEmail").style.borderColor = "rgba(244,244,244,.4)";
+    document.getElementById("fEmail").style.borderColor =
+      "rgba(244,244,244,.4)";
+    document.getElementById("fEmail").focus();
+    return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    document.getElementById("fEmail").style.borderColor =
+      "rgba(244,244,244,.4)";
     document.getElementById("fEmail").focus();
     return;
   }
   if (!subject) {
-    document.getElementById("fSubject").style.borderColor = "rgba(244,244,244,.4)";
+    document.getElementById("fSubject").style.borderColor =
+      "rgba(244,244,244,.4)";
     return;
   }
   if (!message) {
-    document.getElementById("fMessage").style.borderColor = "rgba(244,244,244,.4)";
+    document.getElementById("fMessage").style.borderColor =
+      "rgba(244,244,244,.4)";
     document.getElementById("fMessage").focus();
     return;
   }
 
-  // Prepare email params
   var emailParams = {
     from_name: name,
+    from_email: email,
+    to_email: "ejidoko75@gmail.com",
+    user_name: name,
+    user_email: email,
     reply_to: email,
     subject: subject,
-    message: message
+    message: message,
   };
 
   var submitBtn = document.querySelector(".fsub");
@@ -373,15 +399,30 @@ function submitForm() {
   submitBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Sending...';
   submitBtn.disabled = true;
 
-  emailjs.send("service_ijqcqy8", "template_36qqoqc", emailParams)
+  if (!emailServiceReady) {
+    alert("The email service is unavailable. Please try again shortly.");
+    submitBtn.innerHTML = originalHTML;
+    submitBtn.disabled = false;
+    return;
+  }
+
+  emailjs
+    .send("service_xdarr5b", "template_kx28ode", emailParams)
     .then(function () {
+      document.querySelector(".form-ok-msg").textContent = "Message Sent!";
+      document.querySelector(".form-ok-sub").textContent =
+        "Thanks for reaching out. I'll be in touch shortly.";
       document.getElementById("contactForm").style.display = "none";
       document.getElementById("formOk").style.display = "block";
     })
     .catch(function (error) {
       console.error("Email send failed:", error);
-      alert("Oops! Something went wrong. Please try again.");
+      alert(
+        error.text ||
+          error.message ||
+          "Oops! Something went wrong. Please try again.",
+      );
       submitBtn.innerHTML = originalHTML;
       submitBtn.disabled = false;
     });
-}
+}
